@@ -1,21 +1,57 @@
-﻿using SQLite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AntambaJExamenFinalProgramacionTres;
+using AntambaJExamenFinalProgramacionTres.Models;
+using AntambaJExamenFinalProgramacionTres.Services;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Input;
 
-namespace AntambaJExamenFinalProgramacionTres.ViewModels
+
+public class SuscripcionViewModel : INotifyPropertyChanged
 {
-    public class Suscripcion
+    public ObservableCollection<Suscripcion> Suscripciones { get; } = new();
+
+    public string Servicio { get; set; }
+    public string CorreoAsociado { get; set; }
+    public decimal CostoMensual { get; set; }
+    public bool RenovacionAutomatica { get; set; }
+
+    public ICommand GuardarCommand { get; }
+
+    public SuscripcionViewModel()
     {
-        [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
-        public string Servicio { get; set; }
-        public string CorreoAsociado { get; set; }
-        public decimal CostoMensual { get; set; }
-        public bool RenovacionAutomatica { get; set; }
-        public DateTime FechaRegistro { get; set; }
+        GuardarCommand = new Command(async () => await GuardarSuscripcion());
     }
+
+    private async Task GuardarSuscripcion()
+    {
+        if (((int)CostoMensual) % 2 == 0)
+        {
+            await Shell.Current.DisplayAlert("Error", "El costo mensual debe ser un número impar.", "OK");
+            return;
+        }
+
+        var nueva = new Suscripcion
+        {
+            Servicio = Servicio,
+            CorreoAsociado = CorreoAsociado,
+            CostoMensual = CostoMensual,
+            RenovacionAutomatica = RenovacionAutomatica,
+            FechaRegistro = DateTime.Now
+        };
+
+        await App.Database.InsertSuscripcionAsync(nueva);
+        await LogService.AppendLog(nueva.Servicio);
+        Suscripciones.Add(nueva);
+    }
+
+    public async Task CargarSuscripciones()
+    {
+        Suscripciones.Clear();
+        var lista = await App.Database.GetSuscripcionesAsync();
+        foreach (var s in lista)
+            Suscripciones.Add(s);
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
 }
 

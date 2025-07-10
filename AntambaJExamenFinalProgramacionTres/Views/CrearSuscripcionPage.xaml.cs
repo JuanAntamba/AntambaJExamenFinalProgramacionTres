@@ -1,4 +1,4 @@
-using AntambaJExamenFinalProgramacionTres.ViewModels; 
+
 namespace AntambaJExamenFinalProgramacionTres.Views;
 
 public partial class CrearSuscripcionPage : ContentPage
@@ -9,4 +9,3 @@ public partial class CrearSuscripcionPage : ContentPage
         BindingContext = new SuscripcionViewModel();
     }
 }
-
